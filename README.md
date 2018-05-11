@@ -7,4 +7,4 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 2. ExploratoryDataAnalysis.R - more expansive data analysis / exploration featuring a variety of visualizations, some hopefully to be utilized within the file model data product
 
 3. Week2_Milestone_Report.*X* - files submitted as part of the first milestone report for the capstone project, featuring cleaned up / merged version of the first two R scripts.
--- Also published on RPubs here: .....
+-- Also published on RPubs here: http://rpubs.com/michaelnichols16/SwiftKeyExploration
