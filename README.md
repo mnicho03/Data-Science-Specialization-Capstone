@@ -16,4 +16,7 @@ Basic structure: loads in the text files, cleans them and splits them into token
 Pros: very straight forward / intuitive, efficient, accurate with extremely common phrases
 Cons: no sentiment analysis, phrases beyond tri-grams ignore potential impact from the onset of the phrase, text cleansing could likely be improved to preserve contractions and other words with punctuation within the word
 
-5. 
+Areas for improvement / further inspection: 
+1. utilize train / test datasets - currently using the same random sample for model building and testing
+2. crowdsource text cleansing suggestions / decisions from similar models online to find smarter ways to retain as much intact ngrams as possible
+3. get smarter! - experiment with NLP predictive algorithms and strategies (Good Turing Smoothing methods, Katz's back-off models, etc.), with different text mining R packages (quanteda), evaluate NLP metrics (perplexity, accuracy, efficiency)
