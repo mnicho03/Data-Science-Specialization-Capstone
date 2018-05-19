@@ -17,6 +17,8 @@ Pros: very straight forward / intuitive, efficient, accurate with extremely comm
 Cons: no sentiment analysis, phrases beyond tri-grams ignore potential impact from the onset of the phrase, text cleansing could likely be improved to preserve contractions and other words with punctuation within the word
 
 Areas for improvement / further inspection: 
-1. utilize train / test datasets - currently using the same random sample for model building and testing
-2. crowdsource text cleansing suggestions / decisions from similar models online to find smarter ways to retain as much intact ngrams as possible
-3. get smarter! - experiment with NLP predictive algorithms and strategies (Good Turing Smoothing methods, Katz's back-off models, etc.), with different text mining R packages (quanteda), evaluate NLP metrics (perplexity, accuracy, efficiency)
+    1. utilize train / test datasets - currently using the same random sample for model building and testing
+    2. crowdsource text cleansing suggestions / decisions from similar models online to find smarter ways to retain as much intact ngrams as possible
+    3. get smarter! - experiment with NLP predictive algorithms and strategies (Good Turing Smoothing methods, Katz's back-off models, etc.), with different text mining R packages (quanteda), evaluate NLP metrics (perplexity, accuracy, efficiency)
+
+5. PredictionModel_v2.R  
