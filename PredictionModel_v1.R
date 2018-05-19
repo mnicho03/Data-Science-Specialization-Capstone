@@ -223,7 +223,7 @@ rm(list = setdiff(ls(), c("censored_all_df", "unigram_df", "bigram_df", "trigram
 # fwrite(quadgram_df, "quadgram_df.csv")
 
 #user input
-input <- "a long wwwweay add"
+input <- "The guy in front of me just bought a pound of bacon, a bouquet, and a case of"
 
 #function to clean user input: matches the same text cleansing done to the corpus to ensure a match can be found
 userInput_cleaner <- function(input){
@@ -265,6 +265,7 @@ userInput_words_length <- length(userInput_words)
 # 
 # } else 
 
+set_df_and_ngram <- function(userInput) {
 if (userInput_words_length >= 3) {
         #if it's a trigram or more
         #insert the user input into a variable
@@ -274,6 +275,8 @@ if (userInput_words_length >= 3) {
         
         #data we want to predict off of: since we're looking at 3 words, we want the quadgram DF to look for the potential 4th
         target_df <- quadgram_df
+        assign("ngram", ngram, envir = .GlobalEnv)
+        assign("target_df", target_df, envir = .GlobalEnv)
         
 } else if (userInput_words_length == 2) {
         #if it's a bigram
@@ -282,6 +285,8 @@ if (userInput_words_length >= 3) {
                        userInput_words[userInput_words_length])
         
         target_df <- trigram_df
+        assign("ngram", ngram, envir = .GlobalEnv)
+        assign("target_df", target_df, envir = .GlobalEnv)
         
 } else {
         #if it's a unigram 
@@ -289,7 +294,13 @@ if (userInput_words_length >= 3) {
         ngram <- paste(userInput_words[userInput_words_length])
         
         target_df <- bigram_df
+        assign("ngram", ngram, envir = .GlobalEnv)
+        assign("target_df", target_df, envir = .GlobalEnv)
 }
+}
+
+#run the function
+set_df_and_ngram(userInput)
 
 #take the cleaned ngram and filter based on the user input - to show top_10 predictions
 next_word_Prediction <- function(ngram, target_df) {
