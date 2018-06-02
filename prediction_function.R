@@ -1,3 +1,56 @@
+# #data.table marked as false to ensure it's loaded only as DF
+# unigram_df <- fread("unigram_df.txt", data.table = FALSE)
+# bigram_df <- fread("bigram_df.txt", data.table = FALSE)
+# trigram_df <- fread("trigram_df.txt", data.table = FALSE)
+# quadgram_df <- fread("quadgram_df.txt", data.table = FALSE)
+# 
+# #run garbage collector to return memory
+# gc()
+
+#final model: user input --> prediction
+
+#user input (sample used here: will be dynamic in final model)
+input <- "When you breathe, I want to be the air for you. I'll be there for you, I'd live and I'd"
+
+#function to clean user input: matches similar text cleansing done to the corpus to ensure a match can be found
+userInput_cleaner <- function(input){
+        #clean input text
+        #convert all words to lowercase
+        input_cleaning <- str_to_lower(input)
+        
+        # separate hyphenated and slashed words
+        input_cleaning <- gsub("-", ' ', input_cleaning)
+        input_cleaning <- gsub("/", ' ', input_cleaning) 
+        # removes errant close brackets starting a word
+        input_cleaning <- gsub(">[a-z]", ' ', input_cleaning) 
+        
+        # removes any remaining <> brackets 
+        input_cleaning <- gsub("<>", ' ', input_cleaning) 
+        
+        # remove apostrophe but retain the words (e.g. "don't" to "dont")
+        input_cleaning <- gsub("'", '', input_cleaning)
+        
+        #remove punctuation
+        input_cleaning <- gsub('[[:punct:] ]+', ' ', input_cleaning)
+        
+        #remove numbers
+        input_cleaning <- gsub("[0-9]+", "", input_cleaning)
+        
+        #remove extra whitespace
+        input_cleaning <- gsub("\\s+", " ", input_cleaning)
+        input_clean <- str_trim(input_cleaning)
+        
+        #return the cleaned user input
+        return(input_clean)
+}
+
+#save the userInput to be run in the model   
+userInput <- userInput_cleaner(input)
+
+#determine # of words in the input
+userInput_words <- unlist(str_split(userInput," "))
+userInput_words_length <- length(userInput_words)
+
 #determine which ngram to predict against
 set_df_and_ngram <- function(userInput) {
         if (userInput_words_length >= 3) {
@@ -86,6 +139,7 @@ if(ngram_matches == 0) {
                                 
                                 #final rerun of ngram_matches calculation
                                 ngram_matches <- sum(target_df$preceding == ngram_input)
+                                
                         }
                 }
         }

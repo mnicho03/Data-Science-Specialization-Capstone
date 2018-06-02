@@ -9,6 +9,7 @@ library(data.table) # for fast read / write
 library(stringr) # for string manipulation
 library(dplyr) # for DF manipulation
 library(parallel) #for mclapply function
+library(tidytext) #for tokenization
 
 #set seed for reproducibility
 set.seed(16)
@@ -33,7 +34,7 @@ twitter <- readLines(twitter_full_path, encoding = "UTF-8", skipNul = TRUE)
 #unneccessary to utilize entire files to analyze & build prediction models
 
 #for speed of development and ease of further updates, we'll create a sample factor (to determine how much of the file to load)
-sample_factor <- .001
+sample_factor <- .12
 
 #create the random sample of each file
 mini_blogs <- sample(blogs, length(blogs) * sample_factor)
@@ -167,31 +168,40 @@ testing_corpus_cleaned <- suppressWarnings(corpus_cleaner(testing_corpus))
 #clear out environment other than the corpus
 rm(list = setdiff(ls(), c("training_corpus_cleaned", "testing_corpus_cleaned")))
 
-# #set minimum word threshold
-# mininum_freq <- 5
-# training_unigrams <- training_unigrams %>%
-#         filter(n >= mininum_freq)
-
-
-#function to split ngrams
-ngram <- function(n, text) {
-        textcnt(text, method = "string",n=as.integer(n),
-                split = "[[:space:][:digit:]]+",decreasing=T)
-}
-
 #save off only the text portion of the corpus 
 training_text <- c(training_corpus_cleaned[[1]][[1]])
 #reduce RAM load
 rm(training_corpus_cleaned)
 
-#unigrams
-unigrams <- ngram(1, training_text)
-unigram_df <- data.frame(unigram = names(unigrams), frequency = unclass(unigrams))
+#ngram building
 
-unigram_df$unigram <- as.character(unigram_df$unigram)
-unigram_df$frequency <- as.numeric(unigram_df$frequency)
-#removes mentionings of " <EOS> " (filler used to mark end of sentence/entries)
-unigram_df <- unigram_df[which(unigram_df$unigram!="endofsentencemarker"),]
+#create df to use with dplyr manipulation below
+training_text_df <- data.frame(text = training_text, stringsAsFactors = FALSE)
+
+#unigrams
+#function to tokenize and build the df
+unigram_df_build <- function(ngram_text) {
+        tokenized_all <- ngram_text %>%
+                unnest_tokens(output = unigram, input = text) %>%
+                #filter out end of sentence markers
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), unigram)) %>%
+                count(unigram) %>%
+                select(unigram, n) %>%
+                rename(frequency = n) %>%
+                #arrange in descending order
+                arrange(desc(frequency))
+        
+        #convert single tokens to DF
+        unigram_df <- as.data.frame(tokenized_all)
+        
+        return(unigram_df)
+}
+
+#determine time to create the cleaned ngram_df
+system.time(unigram_df <- unigram_df_build(training_text_df))
+# #using 10% sample
+# user  system elapsed 
+# 14.64    0.21   14.93
 
 #ID the number of unigrams
 length_unigrams <- length(unigram_df$unigram) 
@@ -200,15 +210,37 @@ length_unigrams <- length(unigram_df$unigram)
 #captures the 'frequency of frequencies' (e.g. 100 instances of a word appearing 3 times)
 unigram_frequency_table <- data.frame(unigram = table(unigram_df$frequency))
 
-#bigrams
-bigrams <- ngram(2, training_text)
-names(bigrams) <- gsub("^\'","",names(bigrams))        
-bigram_df <- data.frame(bigram = names(bigrams), frequency = unclass(bigrams))
-names(bigram_df) <- c("bigram","frequency")
+#save off file to load in later if needed
+fwrite(unigram_df, "unigram_df.txt")
+#data.table marked as false to ensure it's loaded only as DF
+unigram_df <- fread("unigram_df.txt", data.table = FALSE)
 
-#removes mentionings of " <EOS> " (filler used to mark end of sentence/entries)
-eosTag <- grepl("endofsentencemarker", bigram_df$bigram)
-bigram_df <- bigram_df[!eosTag,]
+#bigrams
+#function to build the bigram dataframe
+bigram_df_build <- function(ngram_text) {
+        bigram_df <- ngram_text %>%
+                unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+                tidyr::separate(bigram, c("word1", "word2"), sep = " ") %>%
+                na.omit() %>%
+                #filter out end of sentence markers
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word1)) %>%
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word2)) %>%
+                mutate(bigram = paste(word1, word2, sep = " ")) %>%
+                count(bigram) %>%
+                rename(frequency = n) %>%
+                #remove word1 and word2
+                select(bigram, frequency) %>%
+                #arrange in descending order
+                arrange(desc(frequency))
+        
+        return(as.data.frame(bigram_df))
+}
+
+#build the DF of bigrams and calculate the runtime
+system.time(bigram_df <- bigram_df_build(training_text_df))
+#using 10% sample
+# user  system elapsed 
+# 66.01    1.06   72.84 
 
 #ID the number of bigrams
 length_bigrams <- length(bigram_df$bigram) 
@@ -217,15 +249,37 @@ length_bigrams <- length(bigram_df$bigram)
 #captures the 'frequency of frequencies' (e.g. 100 instances of a word appearing 3 times)
 bigram_frequency_table <- data.frame(bigram = table(bigram_df$frequency))
 
-#trigrams
-trigrams <- ngram(3, training_text)
-names(trigrams) <- gsub("^\'","",names(trigrams))
-trigram_df <- data.frame(trigram = names(trigrams), frequency = unclass(trigrams))
-names(trigram_df) <- c("trigram","frequency")
+#save off file to load in later if needed
+fwrite(bigram_df, "bigram_df.txt")
+#data.table marked as false to ensure it's loaded only as DF
+bigram_df <- fread("bigram_df.txt", data.table = FALSE)
 
-#removes mentionings of " <EOS> " (filler used to mark end of sentence/entries)
-eosTag <-grepl("endofsentencemarker", trigram_df$trigram)
-trigram_df <- trigram_df[!eosTag,]
+#trigrams
+trigram_df_build <- function(ngram_text) {
+        trigram_df <- ngram_text %>%
+                unnest_tokens(trigram, text, token = "ngrams", n = 3) %>%
+                tidyr::separate(trigram, c("word1", "word2", "word3"), sep = " ") %>%
+                na.omit() %>%
+                #filter out end of sentence markers
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word1)) %>%
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word2)) %>%
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word3)) %>%
+                mutate(trigram = paste(word1, word2, word3, sep = " ")) %>%
+                count(trigram) %>%
+                rename(frequency = n) %>%
+                #remove word1/2/3
+                select(trigram, frequency) %>%
+                #arrange in descending order
+                arrange(desc(frequency))
+        
+        return(as.data.frame(trigram_df))
+}
+
+#build the DF of trigrams and calculate the runtime
+system.time(trigram_df <- trigram_df_build(training_text_df))
+#using 10% sample
+# user  system elapsed 
+# 124.97    2.04  142.04 
 
 #ID the number of trigrams
 length_trigrams <- length(trigram_df$trigram) 
@@ -234,15 +288,38 @@ length_trigrams <- length(trigram_df$trigram)
 #captures the 'frequency of frequencies' (e.g. 100 instances of a word appearing 3 times)
 trigram_frequency_table <- data.frame(trigram = table(trigram_df$frequency))
 
-#quadgrams
-quadgrams <- ngram(4, training_text)
-names(quadgrams) <- gsub("^\'","",names(quadgrams))
-quadgram_df <- data.frame(quadgram = names(quadgrams), frequency = unclass(quadgrams))
-names(quadgram_df) <- c("quadgram","frequency")
+#save off file to load in later if needed
+fwrite(trigram_df, "trigram_df.txt")
+#data.table marked as false to ensure it's loaded only as DF
+trigram_df <- fread("trigram_df.txt", data.table = FALSE)
 
-#removes mentionings of " <EOS> " (filler used to mark end of sentence/entries)
-eosTag <-grepl("endofsentencemarker", quadgram_df$quadgram)
-quadgram_df <- quadgram_df[!eosTag,]
+#quadgrams
+quadgram_df_build <- function(ngram_text) {
+        quadgram_df <- ngram_text %>%
+                unnest_tokens(quadgram, text, token = "ngrams", n = 4) %>%
+                tidyr::separate(quadgram, c("word1", "word2", "word3", "word4"), sep = " ") %>%
+                na.omit() %>%
+                #filter out end of sentence markers
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word1)) %>%
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word2)) %>%
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word3)) %>%
+                filter(!grepl(paste0("^", "endofsentencemarker", "$"), word4)) %>%
+                mutate(quadgram = paste(word1, word2, word3, word4, sep = " ")) %>%
+                count(quadgram) %>%
+                rename(frequency = n) %>%
+                #remove word1/2/3/4
+                select(quadgram, frequency) %>%
+                #arrange in descending order
+                arrange(desc(frequency))
+        
+        return(as.data.frame(quadgram_df))
+}
+
+#build the DF of quadgrams and calculate the runtime
+system.time(quadgram_df <- quadgram_df_build(training_text_df))
+#using 10% sample
+# user  system elapsed 
+# 155.28    2.27  170.38 
 
 #ID the number of quadgrams
 length_quadgram <- length(quadgram_df$quadgram) 
@@ -251,15 +328,13 @@ length_quadgram <- length(quadgram_df$quadgram)
 #captures the 'frequency of frequencies' (e.g. 100 instances of a word appearing 3 times)
 quadgram_frequency_table <- data.frame(quadgram = table(quadgram_df$frequency))
 
-#clear out ngram textcnt objects
-rm(list = c('unigrams', 'bigrams', 'trigrams', 'quadgrams'))
+#save off file to load in later if needed
+fwrite(quadgram_df, "quadgram_df.txt")
+#data.table marked as false to ensure it's loaded only as DF
+quadgram_df <- fread("quadgram_df.txt", data.table = FALSE)
 
-#shifting to the prediction model
-#convert all ngrams to character (currently factors)
-unigram_df$unigram <- as.character(unigram_df$unigram)
-bigram_df$bigram <- as.character(bigram_df$bigram)
-trigram_df$trigram <- as.character(trigram_df$trigram)
-quadgram_df$quadgram <- as.character(quadgram_df$quadgram)
+#run garbage collector to return memory
+gc()
 
 #create new variables (predicted_word & preceding words) for each ngram DF, which will be used as the output in the final model
 
@@ -292,24 +367,54 @@ bigram_df <- rename(bigram_df, ngram = bigram)
 trigram_df <- rename(trigram_df, ngram = trigram) 
 quadgram_df <- rename(quadgram_df, ngram = quadgram) 
 
+#same process as before: save off and reload files
+#save off files to load in later if needed
+fwrite(unigram_df, "unigram_df.txt")
+fwrite(bigram_df, "bigram_df.txt")
+fwrite(trigram_df, "trigram_df.txt")
+fwrite(quadgram_df, "quadgram_df.txt")
+
+#data.table marked as false to ensure it's loaded only as DF
+unigram_df <- fread("unigram_df.txt", data.table = FALSE)
+bigram_df <- fread("bigram_df.txt", data.table = FALSE)
+trigram_df <- fread("trigram_df.txt", data.table = FALSE)
+quadgram_df <- fread("quadgram_df.txt", data.table = FALSE)
+
+#run garbage collector to return memory
+gc()
+
+#final model: user input --> prediction
+
 #user input (sample used here: will be dynamic in final model)
-input <- "apples to apples and TESTING !@# 123 and let's do the"
+input <- "do the"
 
 #function to clean user input: matches similar text cleansing done to the corpus to ensure a match can be found
 userInput_cleaner <- function(input){
         #clean input text
+        #convert all words to lowercase
+        input_cleaning <- str_to_lower(input)
+        
+        # separate hyphenated and slashed words
+        input_cleaning <- gsub("-", ' ', input_cleaning)
+        input_cleaning <- gsub("/", ' ', input_cleaning) 
+        # removes errant close brackets starting a word
+        input_cleaning <- gsub(">[a-z]", ' ', input_cleaning) 
+        
+        # removes any remaining <> brackets 
+        input_cleaning <- gsub("<>", ' ', input_cleaning) 
+        
+        # remove apostrophe but retain the words (e.g. "don't" to "dont")
+        input_cleaning <- gsub("'", '', input_cleaning)
+        
         #remove punctuation
-        input_cleaning <- gsub('[[:punct:] ]+', ' ', input)
+        input_cleaning <- gsub('[[:punct:] ]+', ' ', input_cleaning)
         
         #remove numbers
         input_cleaning <- gsub("[0-9]+", "", input_cleaning)
         
-        #convert all words to lowercase
-        input_cleaning <- str_to_lower(input_cleaning)
-        
         #remove extra whitespace
-        input_clean <- gsub("\\s+", " ", input_cleaning)
-        input_clean <- str_trim(input_clean)
+        input_cleaning <- gsub("\\s+", " ", input_cleaning)
+        input_clean <- str_trim(input_cleaning)
         
         #return the cleaned user input
         return(input_clean)
