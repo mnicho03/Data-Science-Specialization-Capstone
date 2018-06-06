@@ -16,12 +16,10 @@ library(shiny)
 library(shinythemes) # for sleeker Shiny background 
 library(shinycssloaders) # for plot animations
 
-
 #set seed for consistency
 set.seed(16)
 
-
-#load in ngram data - all of which created within 'PredictionModel_final.R'
+#load in ngram data - all of which created within 'PredictionModel_final.R': 10% random sample of the entire corpus
 #this was run separately and saved off via fwrite to save time
 #data.table marked as false to ensure it's loaded only as DF
 unigram_df <- fread("unigram_df.txt", data.table = FALSE)
@@ -29,18 +27,11 @@ bigram_df <- fread("bigram_df.txt", data.table = FALSE)
 trigram_df <- fread("trigram_df.txt", data.table = FALSE)
 quadgram_df <- fread("quadgram_df.txt", data.table = FALSE)
 
-#for duration of the Shiny app development - use v small sample
-#create the random sample of each file [[later need to remove all '_mini']]
-unigram_df_mini <- sample_n(unigram_df, 100001)
-bigram_df_mini <- sample_n(bigram_df, 100002)
-trigram_df_mini <- sample_n(trigram_df, 100003)
-quadgram_df_mini <- sample_n(quadgram_df, 100004)
-
 #ID the number of ngrams
-length_unigrams_mini <- length(unigram_df_mini$ngram) 
-length_bigrams_mini <- length(bigram_df_mini$ngram) 
-length_trigrams_mini <- length(trigram_df_mini$ngram) 
-length_quadgram_mini <- length(quadgram_df_mini$ngram) 
+length_unigrams <- length(unigram_df$ngram) 
+length_bigrams <- length(bigram_df$ngram) 
+length_trigrams <- length(trigram_df$ngram) 
+length_quadgram <- length(quadgram_df$ngram) 
 
 #load all functions
 #user input (sample used here: will be dynamic in final model)
@@ -98,7 +89,7 @@ set_df_and_ngram <- function(userInput) {
                                      userInput_words[userInput_words_length])
                 
                 #data we want to predict off of: since we're looking at 3 words, we want the quadgram DF to look for the potential 4th
-                target_df <- quadgram_df_mini
+                target_df <- quadgram_df
                 
         } else if (userInput_words_length == 2) {
                 #if it's a bigram
@@ -107,7 +98,7 @@ set_df_and_ngram <- function(userInput) {
                                      userInput_words[userInput_words_length])
                 
                 #data we want to predict off of: since we're looking at 2 words, we want the trigram DF to look for the potential 3rd
-                target_df <- trigram_df_mini
+                target_df <- trigram_df
                 
         } else {
                 #if it's a unigram
@@ -115,7 +106,7 @@ set_df_and_ngram <- function(userInput) {
                 ngram_input <- paste(userInput_words[userInput_words_length])
                 
                 #data we want to predict off of: since we're looking at 1 words, we want the bigram DF to look for the potential 2nd
-                target_df <- bigram_df_mini
+                target_df <- bigram_df
                 
         }
         
@@ -140,21 +131,21 @@ decide_df <- function(ngram_input) {
                 #if matches == 0, set target_DF and ngram as n-1
                 #step 1: determine current target_df
                 #if we're looking for a bigram, set ngram & target_df and then there will be no further action
-                if(length(target_df$ngram) == length(bigram_df_mini$ngram)) {
+                if(length(target_df$ngram) == length(bigram_df$ngram)) {
                         
                         ngram_input <- ngram_input
-                        target_df <- unigram_df_mini
+                        target_df <- unigram_df
                         
                         ngram_matches <- 0
                         
                 } else {
                         
                         #check to see if we're looking for a trigram
-                        if(length(target_df$ngram) == length(trigram_df_mini$ngram)) {
+                        if(length(target_df$ngram) == length(trigram_df$ngram)) {
                                 
                                 #update ngram and target_df to n-1
                                 ngram_input <- word(ngram_input, -1)
-                                target_df <- bigram_df_mini
+                                target_df <- bigram_df
                                 
                                 #rerun ngram_matches calculation
                                 ngram_matches <- sum(target_df$preceding == ngram_input)
@@ -167,7 +158,7 @@ decide_df <- function(ngram_input) {
                                 #grabs the second to last and the last word
                                 ngram_input <- word(ngram_input, -2, -1)
                                 #sets the new target_df
-                                target_df <- trigram_df_mini
+                                target_df <- trigram_df
                                 
                                 #rerun ngram_matches calculation
                                 ngram_matches <- sum(target_df$preceding == ngram_input)
@@ -178,7 +169,7 @@ decide_df <- function(ngram_input) {
                                         #grabs  the last word
                                         ngram_input <- word(ngram_input, -1)
                                         #sets the new target_df
-                                        target_df <- bigram_df_mini
+                                        target_df <- bigram_df
                                         
                                         #final rerun of ngram_matches calculation
                                         ngram_matches <- sum(target_df$preceding == ngram_input)
@@ -204,8 +195,8 @@ target_df <- decide_df(ngram_input)
 next_word_Prediction <- function(ngram_input, target_df) {
         
         #if no matches can be found based on the user input: output top 10 most common words
-        if (length(target_df$ngram) == length(unigram_df_mini$ngram)) {
-                predictions_all <- unigram_df_mini %>%
+        if (length(target_df$ngram) == length(unigram_df$ngram)) {
+                predictions_all <- unigram_df %>%
                         # #remove stopwords from predictions
                         # filter(!predicted_word %in% stop_words$word) %>%
                         mutate(Probability = frequency / sum(frequency)) %>%
@@ -259,7 +250,6 @@ next_word_Prediction <- function(ngram_input, target_df) {
 #output the most likely prediction
 next_word_Prediction(ngram_input, target_df)
 
-
 #shiny ui
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme = shinytheme("cosmo"),
@@ -279,7 +269,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                         sidebarPanel(
                                 helpText("Insert a string or phrase of any length, and click submit to view the next word prediction."),
                                 textInput("user_input", label = h5("User Input Box"), value = "Enter Text Here..."),
-                                #insert condition to predict only when called upon - ideally this will only be used to display visuals
+                                #button used to kickoff the predictions
                                 actionButton("startup", "Initialize", icon("play-circle", lib = "font-awesome")),
                                 hr(),
                                 h5("Predicted Next Word: "), 
@@ -290,11 +280,13 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                                 "Capstone project for the Johns Hopkins Data Science Specialization, in partnership with SwiftKey, a software company specializing in predictive keyboards applications.",
                                 hr(),
                                 h4("User Instructions:"),
-                                "Type any string in the box on the left, and click the 'Initialize' button. The model will then return the predicted next word directly below. The tabs in the center of the page will also populate with updated information summarizing prediction details",
+                                "Type any string in the box on the left, and click the 'Initialize' button. The model will then return the predicted next word directly below. The tabs in the center of the page will also populate with updated information summarizing prediction details.",
                                 h4("Model Notes:"),
-                                "1: If the text entered in the box is unknown, the most common word will display.",
+                                "1: Please be patient: the model may take a few moments to load.",
                                 br(),
-                                "2: If the text box is completely empty, you will receive a polite warning message."
+                                "2: After clicking 'Initialize,' the model becomes dynamic and updates continuously.",
+                                br(),
+                                "3: If the text box is completely empty, you will receive a polite warning message and the visualizations below will disappear."
                         )
                 ),
                 
@@ -314,7 +306,10 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                                        #example of how the prediction is made
                                        tabPanel("Example & Key Terms", withSpinner(htmlOutput("example_text"), color = "red")))),
                         
+                        #final section / footer with links to career / portfolio sites
                         column(width = 12,
+                               #add line break as a makeshift footer 
+                               hr(),
                                #links to LinkedIn / Github
                                uiOutput("LinkedIn_link"),
                                uiOutput("GitHub_link"))

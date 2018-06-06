@@ -18,7 +18,7 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                 sidebarPanel(
                         helpText("Insert a string or phrase of any length, and click submit to view the next word prediction."),
                         textInput("user_input", label = h5("User Input Box"), value = "Enter Text Here..."),
-                        #insert condition to predict only when called upon - ideally this will only be used to display visuals
+                        #button used to kickoff the predictions
                         actionButton("startup", "Initialize", icon("play-circle", lib = "font-awesome")),
                         hr(),
                         h5("Predicted Next Word: "), 
@@ -29,14 +29,15 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
                         "Capstone project for the Johns Hopkins Data Science Specialization, in partnership with SwiftKey, a software company specializing in predictive keyboards applications.",
                         hr(),
                         h4("User Instructions:"),
-                        "Type any string in the box on the left, and click the 'Initialize' button. The model will then return the predicted next word directly below. The tabs in the center of the page will also populate with updated information summarizing prediction details",
+                        "Type any string in the box on the left, and click the 'Initialize' button. The model will then return the predicted next word directly below. The tabs in the center of the page will also populate with updated information summarizing prediction details.",
                         h4("Model Notes:"),
-                        "1: If the text entered in the box is unknown, the most common word will display.",
+                        "1: Please be patient: the model may take a few moments to load.",
                         br(),
-                        "2: If the text box is completely empty, you will receive a polite warning message."
+                        "2: After clicking 'Initialize,' the model becomes dynamic and updates continuously.",
+                        br(),
+                        "3: If the text box is completely empty, you will receive a polite warning message and the visualizations below will disappear."
                 )
         ),
-
                 fluidRow(
                         column(12,
                                       #subsection for the three main visualizations
@@ -52,8 +53,11 @@ shinyUI(fluidPage(theme = shinytheme("cosmo"),
 #tab panel 3                                        
                         #example of how the prediction is made
                         tabPanel("Example & Key Terms", withSpinner(htmlOutput("example_text"), color = "red")))),
-                               
+                        
+                        #final section / footer with links to career / portfolio sites       
                         column(width = 12,
+                               #add line break as a makeshift footer 
+                               hr(),
                               #links to LinkedIn / Github
                                 uiOutput("LinkedIn_link"),
                                 uiOutput("GitHub_link"))
