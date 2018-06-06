@@ -65,6 +65,11 @@ function(input, output, session) {
         #HTML text to display beneath the histogram
         output$top10_hist_text <- renderUI({
                 
+                #validate there is some user input prior to displaying
+                validate(
+                        need(input$user_input != '', '')
+                )
+                
                 #update page only when refresh button is selected
                 if (input$startup == 0) {
                         return()
@@ -136,6 +141,11 @@ function(input, output, session) {
         
         #HTML text to display beneath the general info table
         output$general_info_table_text <- renderUI({
+                
+                #validate there is some user input prior to displaying
+                validate(
+                        need(input$user_input != '', '')
+                )
                 
                 #update page only when refresh button is selected
                 if (input$startup == 0) {
