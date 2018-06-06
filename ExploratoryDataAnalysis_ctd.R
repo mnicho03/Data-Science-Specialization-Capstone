@@ -55,7 +55,6 @@ top10_hist <- ggplot(predictions, aes(x = reorder(predicted_word, frequency), y 
 ####visualization #3
 #obtain general information
 library(kableExtra)
-library(formattable)
 
 #what user input is being evaluated?
 User_Input <- userInput
@@ -87,7 +86,7 @@ general_info <- data.frame(
 kableExtra::kable(general_info, "html", align = "c", escape = F) %>%
         kable_styling("striped", full_width = F) %>%
         column_spec(1, bold = TRUE, border_right = T) %>%
-        column_spec(2, italic = TRUE, background = "palegreen") %>%
+        column_spec(2, italic = TRUE, background = "lightgreen") %>%
         footnote(number = "'Ngram Evaluated' will often equal 'User Input'",
                  symbol = "'Total Ngram Possibilities' shows the total number of Ngrams of this size in the corpus",
                  number_title = "NGram Note: ", symbol_title = "Possibilities vs Identified: ",
