@@ -21,4 +21,8 @@ Areas for improvement / further inspection:
     2. crowdsource text cleansing suggestions / decisions from similar models online to find smarter ways to retain as much intact ngrams as possible
     3. get smarter! - experiment with NLP predictive algorithms and strategies (Good Turing Smoothing methods, Katz's back-off models, etc.), with different text mining R packages (quanteda), evaluate NLP metrics (perplexity, accuracy, efficiency)
 
-5. PredictionModel_v2.R  
+5. PredictionModel_v2.R - revised model - successfully predicted one of the answer options for 6/10 practice phrases from the second quiz 
+
+Improvements from the first file:
+- Developed 80/20 train and test set splits: after creating a 12% random sample of each file (blogs, news, twitter), the train and test sets were then split off of each separate sample. This allowed an even division across the files to enter into the model.
+- Experimented with Good Turing Smoothing methods but elected not to continue with this for the final model.
