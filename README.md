@@ -26,3 +26,5 @@ Areas for improvement / further inspection:
 Improvements from the first file:
 - Developed 80/20 train and test set splits: after creating a 12% random sample of each file (blogs, news, twitter), the train and test sets were then split off of each separate sample. This allowed an even division across the files to enter into the model.
 - Experimented with Good Turing Smoothing methods but elected not to continue with this for the final model.
+
+6. quiz_2.R - practice questions from the quiz with brief summaries of the results (as mentioned above)
