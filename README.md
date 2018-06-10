@@ -32,4 +32,7 @@ Improvements from the first file:
 7. train-test_splitting.R - process used to split the corpus evenly into train/test sets.
     - Basic process: read each line (e.g. article, post, tweet) and creates data frames for each file type listing the line and line number. Under the assumption that the data is already randomized, the first 80% of entries per file get assigned to the train set, and the remaining go to the test set. This method allowed 80% of each file type (blog, news, twitter) to get saved to the train set, rather that grabbing 80% of the total corpus, where it could have had an uneven division of file types in the train/test sets (e.g. all of the Twitter posts in training, all of the blog posts in the testing). 
 
-8. 
+8. ExploratoryDataAnalysis_ctd.R - more exploratory analysis and development of visuals for the final Shiny model
+    - visuals included smoothed scatter plots displaying the frequency of frequencies and wordclouds (both eventually excluded from the final model), as well as bar chart displaying the top 10 most likely predictions with the final prediction highlighted in red, and lastly, a detailed summary table using Kable to outline the key details of the prediction.
+   
+9. 
