@@ -1,7 +1,9 @@
 # Data-Science-Specialization-Capstone
 Capstone Project for Johns Hopkins Data Science Specialization: Natural Language Processing
 
-### File Summary
+### ...
+
+### File Summaries
 1. GettingAndCleaning.R - initial R script used to download the files, test random subsampling, and conduct the initial summary statistics for the full text files
 
 2. ExploratoryDataAnalysis.R - more expansive data analysis / exploration featuring a variety of visualizations, some hopefully to be utilized within the file model data product
@@ -35,4 +37,4 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 8. ExploratoryDataAnalysis_ctd.R - more exploratory analysis and development of visuals for the final Shiny model
 - visuals included smoothed scatter plots displaying the frequency of frequencies and wordclouds (both eventually excluded from the final model), as well as bar chart displaying the top 10 most likely predictions with the final prediction highlighted in red, and lastly, a detailed summary table using Kable to outline the key details of the prediction.
    
-9. 
+9. ngram_building.R - file used to determine best way to tokenize the corpus into ngrams (unigrams, bigrams, trigrams, quadgrams): found a combination of dplyr and tidyr to be sizably the most efficient option. Based on the findings from this file, the final model used the same methodology to tokenize user input text into the respective ngram buckets for predictions.  
