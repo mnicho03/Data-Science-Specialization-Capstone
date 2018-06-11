@@ -46,3 +46,8 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
     - model takes the user input, and upon selection of a refresh button, the user text string is run through the prediction function and the output displays directly below the user input box
     - upon selecton of the refresh button, 2 dynamic tabs update to display prediction details (bar plot of top 10 most likely predictions and a table of summary details of the prediction; another static tab is also available with an example and key terms
     - model takes a few moments to first render in the web page, but generates predictions and visuals very efficiently 
+
+10. bad_words_list.txt - file used for profantity filtering: contains 451 words which we remove from the model
+- This prevents any profane words from later appearing as predictions
+
+11. 
