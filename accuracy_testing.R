@@ -18,6 +18,9 @@
 # library(parallel) #for mclapply function
 # library(tidytext) #for tokenization
 
+# #set seed for reproducibility
+# set.seed(16)
+
 #step 1 - set function to conduct the full prediction (input >> predicted word)
 full_predict_next_word_function <- function(test_text) {
 
@@ -172,4 +175,6 @@ system.time(test_predictions_10000$predicted_word <- sapply(test_predictions_100
 
 #determine percentage of accurately identified next_words
 paste0(round(100 * with(test_predictions_10000, mean(predicted_word == actual_word)),3), "%")
-
+# user   system  elapsed 
+# 10325.68     9.67 10422.65 
+# 14.21 percent accuracy
