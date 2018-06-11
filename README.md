@@ -54,4 +54,4 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 - Process / Logic & Results
     - RData file based off of 'PredictionModel_v2.R' is loaded in with the train / test set data from a random 12% of the entire corpus: this includes all ngram data frames (unigrams - quadgrams) built off the training set as well as the quadgrams from the test set
     - Only quadgrams are loaded from the test set since the model only looks at a maximum of 4 word strings (anything greater than 4 words prior do not effect the predictions) -- the quadgrams alone account for 1,229,670 potential test cases: since the predictions take a couple seconds per, only 10,000 quadgrams are tested to evaluate model accuracy
-    - 
+    - Accuracy results: XXX/10,000 correctly predicted ~ XXX% accuracy
