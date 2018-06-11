@@ -186,7 +186,7 @@ set_top_predictions <- function(ngram_input, target_df) {
                 predictions <- unigram_df %>%
                         # #remove stopwords from predictions
                         # filter(!predicted_word %in% stop_words$word) %>%
-                        mutate(Probability = frequency / sum(frequency)) %>%
+                        mutate(Probability = round(frequency / sum(frequency), 4)) %>%
                         arrange(desc(Probability))  %>%
                         #filter to top 10 only
                         top_n(n = 10, wt = Probability) %>%
@@ -205,7 +205,7 @@ set_top_predictions <- function(ngram_input, target_df) {
                         filter(grepl(paste0("^", ngram_input, "$"), preceding)) %>%
                         # #remove stopwords from predictions
                         # filter(!predicted_word %in% stop_words$word)
-                        mutate(Probability = frequency / sum(frequency)) %>%
+                        mutate(Probability = round(frequency / sum(frequency), 4)) %>%
                         arrange(desc(Probability)) %>% 
                         #filter to top 10 only
                         top_n(n = 10, wt = Probability) %>%
@@ -238,7 +238,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                         column(12,
                                strong("Michael Nichols"),
                                br(),
-                               em("6/8/2018")
+                               em("6/11/2018")
                         )),
                 
                 #area for user input
@@ -372,7 +372,7 @@ server <- function(input, output, session) {
                         
                         #create the plot
                         p <- ggplot(predictions_df, aes(x = reorder(predicted_word, frequency), y = Probability, fill = Probability == max(Probability), color = Probability == max(Probability))) +
-                                geom_text(aes(label = round(Probability, 3)), color = "black", hjust = -0.07, size = 3) +
+                                geom_text(aes(label = round(Probability, 4)), color = "black", hjust = -0.07, size = 3) +
                                 geom_bar(stat = "identity", alpha = .95) +
                                 #highlight only the predicted value red with a gold border
                                 scale_fill_manual(values = c("lightsteelblue2", "firebrick3")) +
@@ -404,7 +404,7 @@ server <- function(input, output, session) {
                              </li><li>
                              If a tie occurs, the model will randomly select a word and red fill will be applied to each word with the equivalent likelihood. These probabilities are based on millions of text string patterns analyzed from the SwiftKey corpus, including blog posts, news articles, and tweets.
                              </li><li>
-                             If the user enters text which is completely unknown to the model, the top 10 most likely words which occurred throughout the entire Swiftkey corpus will be displayed.</li></ul>")    
+                             If the user enters text which is completely unknown to the model, the top 10 most likely words which occurred throughout the entire SwiftKey corpus will be displayed.</li></ul>")    
                 }
                 })
         
@@ -433,7 +433,7 @@ server <- function(input, output, session) {
                         set_df_and_ngram(processing_text)
 
                         # determine if target_DF identified above will have a matching ngram
-                        # if no match exists, search through suceeding (smaller) ngram DF's until a matching ngram exists
+                        # if no match exists, search through succeeding (smaller) ngram DF's until a matching ngram exists
                         target_df <- decide_df(ngram_input)
 
                         #run the function and output the top 10 most likely predictions
