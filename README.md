@@ -9,7 +9,7 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 2. ExploratoryDataAnalysis.R - more expansive data analysis / exploration featuring a variety of visualizations, some hopefully to be utilized within the file model data product
 
 3. Week2_Milestone_Report.*X* - files submitted as part of the first milestone report for the capstone project, featuring cleaned up / merged version of the first two R scripts.
-- Also published on RPubs here: http://rpubs.com/michaelnichols16/SwiftKeyExploration
+- Full RPubs document can be viewed here: http://rpubs.com/michaelnichols16/SwiftKeyExploration
 
 4. PredictionModel_v1.R - initial model - did not meet sufficient accuracy metrics and could only successfully predict 2/10 practice phrases from the quiz
 
@@ -40,7 +40,7 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 9. ngram_building.R - file used to determine best way to tokenize the corpus into ngrams (unigrams, bigrams, trigrams, quadgrams): found a combination of dplyr and tidyr to be sizably the most efficient option. Based on the findings from this file, the final model used the same methodology to tokenize user input text into the respective ngram buckets for predictions.  
 
 10. app.R - file used to create the final data product (Shiny application) - includes server.R and ui.R scripts
-- Shiny app can be viewed here: XXXXXXXXXXXXXXXXXXX
+- Shiny App can be viewed here: XXXXXXXXXXXXXXXXXXX
 - Model overview: application and predictions generated based off a random 5% sample of the entire corpus (largest file which could be accomodated by Shiny free user profile size restrictions)
     - cleansed random 5% sample of the corpus created within 'PredictionModel_final.R' is first loaded in as a RData file and the prediction functions are loaded afterwards
     - model takes the user input, and upon selection of a refresh button, the user text string is run through the prediction function and the output displays directly below the user input box
@@ -57,3 +57,4 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
     - Accuracy results: 1,421 / 10,000 correctly predicted ~ 14.21% accuracy
     
 12. predictive_text_app_presentation.Rpres - Rstudio presentation "pitching" the final data product (Shiny app) as if to a boss or potential investor. Slide deck consists of 5 slides that (1) explain how the model works, (2) describe its predictive performance quantitatively, and (3) shows off the app and how it works.
+- Rstudio Presentation can be viewed here: XXXXXXXXXXXXXXXXXXX
