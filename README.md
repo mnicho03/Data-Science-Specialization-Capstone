@@ -38,3 +38,11 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 - visuals included smoothed scatter plots displaying the frequency of frequencies and wordclouds (both eventually excluded from the final model), as well as bar chart displaying the top 10 most likely predictions with the final prediction highlighted in red, and lastly, a detailed summary table using Kable to outline the key details of the prediction.
    
 9. ngram_building.R - file used to determine best way to tokenize the corpus into ngrams (unigrams, bigrams, trigrams, quadgrams): found a combination of dplyr and tidyr to be sizably the most efficient option. Based on the findings from this file, the final model used the same methodology to tokenize user input text into the respective ngram buckets for predictions.  
+
+10. app.R - file used to create the final data product (Shiny application) - includes server.R and ui.R scripts
+- Shiny app can be viewed here: XXXXXXXXXXXXXXXXXXX
+- Model overview: application and predictions generated based off a random 5% sample of the entire corpus (largest file which could be accomodated by Shiny free user profile size restrictions)
+    - cleansed random 5% sample of the corpus created within 'PredictionModel_final.R' is first loaded in as a RData file and the prediction functions are loaded afterwards
+    - model takes the user input, and upon selection of a refresh button, the user text string is run through the prediction function and the output displays directly below the user input box
+    - upon selecton of the refresh button, 2 dynamic tabs update to display prediction details (bar plot of top 10 most likely predictions and a table of summary details of the prediction; another static tab is also available with an example and key terms
+    - model takes a few moments to first render in the web page, but generates predictions and visuals very efficiently 
