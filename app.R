@@ -2,41 +2,27 @@
 #loads in all necessary information for the moment the Shiny app gets called by a new user
 #script includes ui.R and server.R content
 
-#set working directory
-setwd("C:/Users/mnicho03/Desktop/Capstone_Local")
+##set working directory - unnecessary within published version
+#setwd("C:/Users/mnicho03/Desktop/Capstone_Local/Predictive_Text_Application")
+
+##load in ngram data - all of which created within 'PredictionModel_final.R': 5% random sample of the entire corpus ~~ this was the largest sample size i could create in order to fit within the Shiny free user size restrictions (1GB)
+##this was run separately and saved off in a Data subfolder 
+load('./data/ngram_data_05.RData')
 
 #load libraries
-library(data.table) # for fast read / write
 library(stringr) # for string manipulation
 library(dplyr) # for DF manipulation
-library(wordcloud) # for visuals
 library(ggplot2) # for visuals
 library(kableExtra) # for visuals (cleaner tables)
 library(shiny)
 library(shinythemes) # for sleeker Shiny background 
 library(shinycssloaders) # for plot animations
 
-#set seed for consistency
-set.seed(16)
-
-#load in ngram data - all of which created within 'PredictionModel_final.R': 10% random sample of the entire corpus
-#this was run separately and saved off via fwrite to save time
-#data.table marked as false to ensure it's loaded only as DF
-unigram_df <- fread("unigram_df.txt", data.table = FALSE)
-bigram_df <- fread("bigram_df.txt", data.table = FALSE)
-trigram_df <- fread("trigram_df.txt", data.table = FALSE)
-quadgram_df <- fread("quadgram_df.txt", data.table = FALSE)
-
-#ID the number of ngrams
-length_unigrams <- length(unigram_df$ngram) 
-length_bigrams <- length(bigram_df$ngram) 
-length_trigrams <- length(trigram_df$ngram) 
-length_quadgram <- length(quadgram_df$ngram) 
-
 #load all functions
 #user input (sample used here: will be dynamic in final model)
 input <- "enter text here"
 
+#load all functions from cleaning to prediction
 #function to clean user input: matches similar text cleansing done to the corpus to ensure a match can be found
 userInput_cleaner <- function(input){
         #clean input text
@@ -71,14 +57,15 @@ userInput_cleaner <- function(input){
 }
 
 # #save the userInput to be run in the model
-userInput <- userInput_cleaner(input)
+# processing_text <- userInput_cleaner(input)
 
+#creates two vars [target_df & ngram_input]
 #determine which ngram to predict against
 set_df_and_ngram <- function(userInput) {
         
         
         #determine # of words in the input - save globablly
-        userInput_words <- unlist(str_split(userInput," "))
+        userInput_words <- unlist(str_split(userInput, " "))
         userInput_words_length <- length(userInput_words)
         
         if (userInput_words_length >= 3) {
@@ -115,8 +102,8 @@ set_df_and_ngram <- function(userInput) {
         assign("target_df", target_df, envir = .GlobalEnv)
 }
 
-# #run the function
-set_df_and_ngram(userInput)
+# #run the function with the cleaned text
+# set_df_and_ngram(processing_text)
 
 # determine if target_DF identified above will have a matching ngram
 # if no match exists, search through suceeding (smaller) ngram DF's until a matching ngram exists
@@ -189,66 +176,56 @@ decide_df <- function(ngram_input) {
 }
 
 # #run the function above to confirm the target_df
-target_df <- decide_df(ngram_input)
+# target_df <- decide_df(ngram_input)
 
 #take the cleaned ngram and filter based on the user input - to show predicted word as well as top_10 predictions
-next_word_Prediction <- function(ngram_input, target_df) {
+set_top_predictions <- function(ngram_input, target_df) {
         
         #if no matches can be found based on the user input: output top 10 most common words
         if (length(target_df$ngram) == length(unigram_df$ngram)) {
-                predictions_all <- unigram_df %>%
+                predictions <- unigram_df %>%
                         # #remove stopwords from predictions
                         # filter(!predicted_word %in% stop_words$word) %>%
                         mutate(Probability = frequency / sum(frequency)) %>%
-                        arrange(desc(Probability))
-                
-                predictions <- predictions_all %>%
+                        arrange(desc(Probability))  %>%
+                        #filter to top 10 only
                         top_n(n = 10, wt = Probability) %>%
                         arrange(desc(Probability)) %>%
                         slice(row_number(1:10)) #ensure 10 values max
                 
-                #convert to clean data frames
+                #convert to clean data frame
                 predictions <- as.data.frame(predictions)
-                predictions_all <- as.data.frame(predictions_all)
                 
-                #save predictions DF's to be used in data product visualizations
-                assign("predictions", predictions, envir = .GlobalEnv)
-                assign("predictions_all", predictions_all, envir = .GlobalEnv)
                 
         } else {
-        
-        #gather predictions
-        predictions_all <- target_df %>%
-                #filter on exact matches (^ngram$)
-                filter(grepl(paste0("^", ngram_input, "$"), preceding)) %>%
-                # #remove stopwords from predictions
-                # filter(!predicted_word %in% stop_words$word) %>%
-                mutate(Probability = frequency / sum(frequency)) %>%
-                arrange(desc(Probability))
-        
-        #save two separate DF's of the predictions (1 filtered to top 10 / 1 not)
-        predictions <- predictions_all %>%
-                top_n(n = 10, wt = Probability) %>%
-                arrange(desc(Probability)) %>%
-                slice(row_number(1:10)) #ensure 10 values max
-        
-        #convert to clean data frames
-        predictions <- as.data.frame(predictions)
-        predictions_all <- as.data.frame(predictions_all)
-        
-        #save predictions DF's to be used in data product visualizations
-        assign("predictions", predictions, envir = .GlobalEnv)
-        assign("predictions_all", predictions_all, envir = .GlobalEnv)
+                
+                #gather predictions
+                predictions <- target_df %>%
+                        #filter on exact matches (^ngram$)
+                        filter(grepl(paste0("^", ngram_input, "$"), preceding)) %>%
+                        # #remove stopwords from predictions
+                        # filter(!predicted_word %in% stop_words$word)
+                        mutate(Probability = frequency / sum(frequency)) %>%
+                        arrange(desc(Probability)) %>% 
+                        #filter to top 10 only
+                        top_n(n = 10, wt = Probability) %>%
+                        arrange(desc(Probability)) %>%
+                        slice(row_number(1:10)) #ensure 10 values max
+                
+                #convert to clean data frame
+                predictions <- as.data.frame(predictions)
         }
         
-        #print the most likely result only 
-        # print(predictions)
-        return(predictions$predicted_word[1])
+        #save predictions DF to be used in data product visualizations
+        #double check it saves properly
+        predictions_df <- predictions
+        
+        #save the most 10 likely predictions
+        assign("predictions_df", predictions, envir = .GlobalEnv)
 }
 
-#run the prediction function and output the predictions
-#output the most likely prediction
-next_word_Prediction(ngram_input, target_df)
+# #run the function to capture the most likely predictions
+# set_top_predictions(ngram_input, target_df)
 
 #shiny ui
 # Define UI for application that draws a histogram
@@ -261,52 +238,51 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                         column(12,
                                strong("Michael Nichols"),
                                br(),
-                               em("6/6/2018")
+                               em("6/8/2018")
                         )),
                 
                 #area for user input
                 sidebarLayout(
                         sidebarPanel(
-                                helpText("Insert a string or phrase of any length, and click submit to view the next word prediction."),
+                                helpText("Insert a string or phrase of any length, and click refresh to view the next word prediction."),
                                 textInput("user_input", label = h5("User Input Box"), value = "Enter Text Here..."),
                                 #button used to kickoff the predictions
-                                actionButton("startup", "Initialize", icon("play-circle", lib = "font-awesome")),
+                                actionButton("refresh", "Refresh", icon("refresh", lib = "font-awesome")),
                                 hr(),
                                 h5("Predicted Next Word: "), 
                                 h5(textOutput("predicted_next_word"))),
                         
                         mainPanel(
                                 h4("Natural Language Processing Predictive Text Model Utilizing Shiny"),
-                                "Capstone project for the Johns Hopkins Data Science Specialization, in partnership with SwiftKey, a software company specializing in predictive keyboards applications.",
+                                "Capstone project for the Johns Hopkins Data Science Specialization, in partnership with SwiftKey, a software company specializing in predictive keyboard applications.",
                                 hr(),
                                 h4("User Instructions:"),
-                                "Type any string in the box on the left, and click the 'Initialize' button. The model will then return the predicted next word directly below. The tabs in the center of the page will also populate with updated information summarizing prediction details.",
+                                "Type any string in the box on the left, and click the 'Refresh' button. The model will then return the predicted next word directly below. The tabs in the center of the page will also populate with updated information summarizing prediction details.",
                                 h4("Model Notes:"),
-                                "1: Please be patient: the model may take a few moments to load.",
+                                "1: Please be patient: the model may take a minute to fully load.",
                                 br(),
-                                "2: After clicking 'Initialize,' the model becomes dynamic and updates continuously.",
+                                "2: Click 'Refresh' upon editing to view the updated prediction and details.",
                                 br(),
                                 "3: If the text box is completely empty, you will receive a polite warning message and the visualizations below will disappear."
                         )
                 ),
-                
                 fluidRow(
                         column(12,
                                #subsection for the three main visualizations
                                tabsetPanel(
-                                       #tab panel 1                                       
-                                       tabPanel("Top 10 Most Likely Predictions", withSpinner(plotOutput("top10_hist"), color = "red"),
-                                                #html output of the full visualization description - must be called in this fashion in order to delay its appearance until the 'Initialize' button is selected
-                                                htmlOutput("top10_hist_text")),        
-                                       #tab panel 2
+                                       #tab panel 1
                                        tabPanel("Prediction Details", withSpinner(tableOutput("general_info_table"), color = "red"),
-                                                #html output of the full visualization description - must be called in this fashion in order to delay its appearance until the 'Initialize' button is selected
+                                                #html output of the full visualization description - must be called in this fashion in order to delay its appearance until the 'Refresh' button is selected
                                                 htmlOutput("general_info_table_text")),
+                                       #tab panel 2
+                                       tabPanel("Top 10 Most Likely Predictions", withSpinner(plotOutput("top10_hist"), color = "red"),
+                                                #html output of the full visualization description - must be called in this fashion in order to delay its appearance until the 'Refresh' button is selected
+                                                htmlOutput("top10_hist_text")),        
                                        #tab panel 3                                        
                                        #example of how the prediction is made
                                        tabPanel("Example & Key Terms", withSpinner(htmlOutput("example_text"), color = "red")))),
                         
-                        #final section / footer with links to career / portfolio sites
+                        #final section / footer with links to career / portfolio sites       
                         column(width = 12,
                                #add line break as a makeshift footer 
                                hr(),
@@ -314,70 +290,98 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                                uiOutput("LinkedIn_link"),
                                uiOutput("GitHub_link"))
                         
-                        
                 )
 )
+
+
+########## ui / server split ##################
+
 
 #shiny server
 server <- function(input, output, session) {
         
+        #set user input as a reactive variable to use with visualizations
+        #store the user_input when clicked
+        user_input_reactive <- eventReactive(input$refresh, {
+                input$user_input
+        })
+        
         #output the user text
         output$predicted_next_word <- renderText({
                 
-                #update page only when refresh button is selected
-                if (input$startup == 0) {
+                #run after the Refresh button is selected
+                if (input$refresh == 0) {
                         return()
                 }  else {
                         
                         #validate there is some user input prior to evaluating
                         validate(
-                                need(input$user_input != '', 'Please begin typing above...')
+                                need(user_input_reactive() != '', 'Please begin typing above...')
                         )
                         
                         #run the user input through the following functions
                         #clean the text
-                        processing_text <- userInput_cleaner(input$user_input)
-                        #determine which ngram to predict against
+                        processing_text <- userInput_cleaner(user_input_reactive())
+                        
                         #creates two vars [target_df & ngram_input]
+                        #determine which ngram to predict against
                         set_df_and_ngram(processing_text)
                         
                         # determine if target_DF identified above will have a matching ngram
                         # if no match exists, search through suceeding (smaller) ngram DF's until a matching ngram exists
                         target_df <- decide_df(ngram_input)
                         
-                        #run the prediction function and output the predictions
-                        #create var for the most likely prediction
-                        next_word <- next_word_Prediction(ngram_input, target_df)
+                        #run the function and output the top 10 most likely predictions
+                        #create global var for the most likely predictions (predictions_df)
                         
-                        # return predicted word
-                        return(next_word)
+                        set_top_predictions(ngram_input, target_df)
+                        
+                        #print the most likely prediction
+                        return(predictions_df$predicted_word[1])
                 }
         })
         
         #plot to show histogram of top_10 most likely predictions based on user input
-        #consider including highlight for the predicted word
         output$top10_hist <- renderPlot({
                 
                 #validate there is some user input prior to evaluating
                 validate(
-                        need(input$user_input != '', 'User Input Required')
+                        need(user_input_reactive() != '', 'User Input Required')
                 )
                 
                 #update page only when refresh button is selected
-                if (input$startup == 0) {
+                if (input$refresh == 0) {
                         return()
-                }  else {
+                } else {
                         
-                        ggplot(predictions, aes(x = reorder(predicted_word, frequency), y = Probability, fill = Probability == max(Probability), color = Probability == max(Probability))) +
+                        #run the reactive user input through the following functions to store variables for the table                   #clean the text
+                        processing_text <- userInput_cleaner(user_input_reactive())
+
+                        #creates two vars [target_df & ngram_input]
+                        #determine which ngram to predict against
+                        set_df_and_ngram(processing_text)
+
+                        # determine if target_DF identified above will have a matching ngram
+                        # if no match exists, search through suceeding (smaller) ngram DF's until a matching ngram exists
+                        target_df <- decide_df(ngram_input)
+
+                        #run the function and output the top 10 most likely predictions
+                        #create global var for the most likely predictions (predictions_df)
+
+                        set_top_predictions(ngram_input, target_df)
+                        
+                        #create the plot
+                        p <- ggplot(predictions_df, aes(x = reorder(predicted_word, frequency), y = Probability, fill = Probability == max(Probability), color = Probability == max(Probability))) +
                                 geom_text(aes(label = round(Probability, 3)), color = "black", hjust = -0.07, size = 3) +
                                 geom_bar(stat = "identity", alpha = .95) +
                                 #highlight only the predicted value red with a gold border
                                 scale_fill_manual(values = c("lightsteelblue2", "firebrick3")) +
                                 scale_color_manual(values = c("white", "goldenrod")) +
-                                
-                                labs(y = "", x = "", title = "Next Word Predictions", subtitle = "Includes (at most) top 10 most probable next words based on the model") +
+                                labs(y = "", x = "", title = "Next Word Predictions", subtitle = "Includes (at most) the top 10 most probable next words based on the model") +
                                 coord_flip() +
                                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
+                        #print the plot
+                        print(p)
                         
                 }
         })
@@ -387,18 +391,18 @@ server <- function(input, output, session) {
                 
                 #validate there is some user input prior to displaying
                 validate(
-                        need(input$user_input != '', '')
+                        need(user_input_reactive() != '', '')
                 )
                 
-                #update page only when refresh button is selected
-                if (input$startup == 0) {
+                #run after the Refresh button is selected
+                if (input$refresh == 0) {
                         return()
                 }  else {
                         
                         #full text description w/ breaks between bullets
                         HTML("<ul><li>Horizontal bar chart displaying (up to) the top 10 most likely predictions based on the model. The predicted word, as seen above in the top left section of the page, will have a distinguishing red fill.
                              </li><li>
-                             If a tie occurs, the model will randomly select a word and no red fill will be applied. These probabilities are based on millions of text string patterns analyzed from SwiftKey, which included blog posts, news articles, and tweets.
+                             If a tie occurs, the model will randomly select a word and red fill will be applied to each word with the equivalent likelihood. These probabilities are based on millions of text string patterns analyzed from the SwiftKey corpus, including blog posts, news articles, and tweets.
                              </li><li>
                              If the user enters text which is completely unknown to the model, the top 10 most likely words which occurred throughout the entire Swiftkey corpus will be displayed.</li></ul>")    
                 }
@@ -409,27 +413,45 @@ server <- function(input, output, session) {
                 
                 #validate there is some user input prior to evaluating
                 validate(
-                        need(input$user_input != '', 'User Input Required')
+                        need(user_input_reactive() != '', 'User Input Required')
                 )
                 
-                #update page only when refresh button is selected
-                if (input$startup == 0) {
+                #run after the Refresh button is selected
+                if (input$refresh == 0) {
                         return()
                 }  else {
                         
                         #ensure text box not blank 
-                        req(input$user_input)
+                        req(user_input_reactive())
+                        
+                        #run the reactive user input through the following functions to store variables for the table
+                        #clean the text
+                        processing_text <- userInput_cleaner(user_input_reactive())
+
+                        #creates two vars [target_df & ngram_input]
+                        #determine which ngram to predict against
+                        set_df_and_ngram(processing_text)
+
+                        # determine if target_DF identified above will have a matching ngram
+                        # if no match exists, search through suceeding (smaller) ngram DF's until a matching ngram exists
+                        target_df <- decide_df(ngram_input)
+
+                        #run the function and output the top 10 most likely predictions
+                        #create global var for the most likely predictions (predictions_df)
+
+                        set_top_predictions(ngram_input, target_df)
                         
                         #what user input is being evaluated?
-                        User_Input <- input$user_input
+                        User_Input <- user_input_reactive()
                         #which ngram is being used to predict? (often will be the same as above)
                         Ngram_Evaluated <- ngram_input
                         #which ngram data frame is being examined (simply count the number of words in the ngram input)
-                        Ngram_DF_Evaluated <- if(str_count(Ngram_Evaluated) == 3) {         
+                        #"\\S+" - counts separations with a space
+                        Ngram_DF_Evaluated <- if(str_count(Ngram_Evaluated, "\\S+") == 3) {         
                                 "Quadgrams"
-                        }       else if(str_count(Ngram_Evaluated) == 2) {
+                        }       else if(str_count(Ngram_Evaluated, "\\S+") == 2) {
                                 "Trigrams"
-                        }       else if(str_count(Ngram_Evaluated) == 1) {
+                        }       else if(str_count(Ngram_Evaluated, "\\S+") == 1) {
                                 "Bigrams"
                         }       else
                                 "Unigrams"
@@ -464,20 +486,20 @@ server <- function(input, output, session) {
                 
                 #validate there is some user input prior to displaying
                 validate(
-                        need(input$user_input != '', '')
+                        need(user_input_reactive() != '', '')
                 )
                 
-                #update page only when refresh button is selected
-                if (input$startup == 0) {
+                #run after the Refresh button is selected
+                if (input$refresh == 0) {
                         return()
                 }  else {
                         
                         #full text description w/ breaks between bullets
                         HTML("<ul><li>User Input: the exact text entered by the user in the box above
                              </li><li>
-                             N-gram Evaluated: after a thorough text cleanse, removing things like capital letters, special characters, and other random punctuation, the n-gram (continuous sequence of words of 'n' length) applied to the model
+                             N-gram Evaluated: after a thorough text cleanse, removing things like capital letters, special characters, and other random punctuation, the n-gram applied to the model
                              </li><li>
-                             N-gram DF Evaluated: data frame evaluated based on the number of words applied to the prediction ~ ptions include unigrams, bigrams, trigrams, and quadgrams
+                             N-gram DF Evaluated: data frame evaluated based on the number of words applied to the prediction ~ options include unigrams, bigrams, trigrams, and quadgrams
                              </li><li>
                              Total N-gram Possibilities: the total number of n-grams which exist based on the 'N-gram DF Evaluated' above
                              </li><li>
@@ -493,25 +515,22 @@ server <- function(input, output, session) {
                 #example group
                 HTML(paste("<b>", "User Input: ", "</b>"), 
                      #adds line break between user input and prediction process
-                     paste("'THIS IS a mighty cousy home, and'", 
+                     paste("'The audience was AMAZED, and filled with the...'", 
                            "<b>", "Prediction Process: ", "</b>", sep = "<br/>"),
                      "<ol><li>
-                     Model will scan the user input string and clean the text to 'this a mighty cousy home and'.
+                     Model will scan the user input string and clean the text to 'the audience was amazed and filled with the'.
                      </li><li>
                      Model will determine the number of words in the string. In this case, the string exceeds 3 
                      words, which is the maximum amount of words the model will consider to make a prediction.
                      </li><li>
-                     The last 3 words ('cousy home and') will be used to make the prediction.
+                     The last 3 words ('filled with the') will be used to make the prediction.
                      </li><li>
-                     The model will look through all previously encountered strings of 'cousy home and' in its memory and return the word that most often follows this text.
+                     The model will look through all previously encountered strings of 'filled with the' in its memory and return the word that most often follows this text.
                      </li><li>
-                     To no surprise, the model has never seen this exact string. The model will then strip the most recent 2 words ('home and') and return the word that most often follows this text. 
-                     =                        </li><li>
-                     Here, the predicted output would be 'XXXXXXXXXXXX.
+                     In this case, the model recognizes this exact string and can form a prediction. If 'filled with the' was an unknown string, the model would strip the most recent 2 words ('with the') and return the word that most often follows that text. This process would repeat if the model did not recognize last 2 words, and even further, if even the most recent 1 word did not have a match, the most common of all words seen by the model (regardless of past text) would be the predicted output. 
+                     </li><li>
+                     Here, the predicted output would be 'spirit.'
                      </li></ol>",
-                     "<ul><li>
-                     If necessary, the model would have checked the most recent 1 word if the last 2 words did not have any matches, and if even the most recent 1 word did not have a match, the most common of all words seen by the model (regardless of past text) would be the predicted output.
-                     </ul></li>",
                      
                      #key terms section
                      paste("<b>", "Key Terms: ", "</b>"),
@@ -542,9 +561,7 @@ server <- function(input, output, session) {
         
         
         
-        }
-
-
+}
 
 # Create Shiny object
 shinyApp(ui = ui, server = server)
