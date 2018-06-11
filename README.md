@@ -16,7 +16,8 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 5. A 5 slide deck created with R presentations pitching your algorithm and app to your boss or investor.
 
 ### Final Deliverables
-** all files explained in further detail below.
+***all files explained in further detail below. 
+
 - Week2_Milestone_Report.*X* - first milestone report focused on exploratory data analysis, featuring cleaned up / merged version of the first two R scripts.
     - Full RPubs document can be viewed here: http://rpubs.com/michaelnichols16/SwiftKeyExploration 
 - app.R - final data product (Shiny application) - includes server.R and ui.R scripts
