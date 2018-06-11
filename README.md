@@ -43,7 +43,7 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 9. ngram_building.R - file used to determine best way to tokenize the corpus into ngrams (unigrams, bigrams, trigrams, quadgrams): found a combination of dplyr and tidyr to be sizably the most efficient option. Based on the findings from this file, the final model used the same methodology to tokenize user input text into the respective ngram buckets for predictions.  
 
 10. app.R - file used to create the final data product (Shiny application) - includes server.R and ui.R scripts
-- Shiny App can be viewed here: XXXXXXXXXXXXXXXXXXX
+- Shiny App can be viewed here: https://michaelnichols16.shinyapps.io/Predictive_Text_Application/
 - Model overview: application and predictions generated based off a random 5% sample of the entire corpus (largest file which could be accomodated by Shiny free user profile size restrictions)
     - cleansed random 5% sample of the corpus created within 'PredictionModel_final.R' is first loaded in as a RData file and the prediction functions are loaded afterwards
     - model takes the user input, and upon selection of a refresh button, the user text string is run through the prediction function and the output displays directly below the user input box
