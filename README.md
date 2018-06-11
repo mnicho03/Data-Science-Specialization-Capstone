@@ -1,10 +1,28 @@
 # Data-Science-Specialization-Capstone
 Capstone Project for Johns Hopkins Data Science Specialization: Natural Language Processing
 
-# Problem Summary
+### Problem Summary
+- Apply all the skills developed throughout the Data Science Specialization to tackle a brand new application: analysis of text data and natural language processing.
+
+### Project Goal:
+- Mimic the experience of being a data scientist, by encountering a messy data set, a vague question, and very little instruction on exactly how to analyze the data. 
+- Traverse the full spectrum of the data science activities: understanding the problem, data acquisition and cleaning, exploratory analysis, statistical modeling, predictive modeling, creative exploration, creating a data product, creating a short slide deck pitching your product.
+
+- The full project tasks and deliverables included the following:
+1. An introductory quiz to test whether you have downloaded and can manipulate the data.
+2. An intermediate R markdown report that describes in plain language, plots, and code your exploratory analysis of the course data set.
+3. Two natural language processing quizzes, where you apply your predictive model to real data to check how it is working.
+4. A Shiny app that takes as input a phrase (multiple words), one clicks submit, and it predicts the next word.
+5. A 5 slide deck created with R presentations pitching your algorithm and app to your boss or investor.
 
 ### Final Deliverables
-
+** all files explained in further detail below.
+- Week2_Milestone_Report.*X* - first milestone report focused on exploratory data analysis, featuring cleaned up / merged version of the first two R scripts.
+    - Full RPubs document can be viewed here: http://rpubs.com/michaelnichols16/SwiftKeyExploration 
+- app.R - final data product (Shiny application) - includes server.R and ui.R scripts
+    - Shiny App can be viewed here: https://michaelnichols16.shinyapps.io/Predictive_Text_Application/
+- predictive_text_app_presentation.Rpres - Rstudio presentation "pitching" the final data product
+    - Rstudio Presentation can be viewed here: XXXXXXXXXXXXXXXXXXX
 
 ### All File Summaries
 1. GettingAndCleaning.R - initial R script used to download the files, test random subsampling, and conduct the initial summary statistics for the full text files
