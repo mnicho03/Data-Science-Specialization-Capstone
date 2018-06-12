@@ -1,0 +1,426 @@
+<style>
+.small-code pre code {
+  font-size: .9em;
+}
+</style>
+
+Natural Language Processing Project: Predictive Text Model
+========================================================
+author: Michael Nichols
+date: 6/11/18
+autosize: true
+
+Model Overview
+========================================================
+width: 1920
+height: 1080
+class: small-code
+
+*Overview:*
+<small>
+-- Shiny app to predict the next word based a user's text input.
+<br>
+-- Capstone project for the Data Science Specialization from Johns Hopkins University, developed in partnership with SwiftKey.
+</small>
+<br>
+*Strategy:*
+<small>
+-- Speed and simplicity: create an intuitive, efficient predictive model
+</small>
+<br>
+*Logic & Prediction Process:*
+<small>
+1. Clean & tokenize SwiftKey corpus into ngrams (1-4 words) after isolating sentences and removing profanities.
+<br>
+2. Save the 4 separate ngram data sets.
+</small>
+***
+<small>
+3. Analyze text based on length, and return most common word following that text string.
+<br>
+4. For unknown strings, the process repeats against the smaller ngrams.
+<br>
+5. If entire string is unknown, return the most common of all words.
+</small>
+<br>
+*Pros & Cons:*
+<small>
+--*Pros:* speed; straight-forward and interpretable; accurate with commonly recognized strings
+<br>
+-- *Cons (Areas for Improvement):* context beyond 4 words; part of speech logic (e.g. noun typically follows this); remove all proper words
+</small>
+
+Model Performance
+========================================================
+width: 1920
+height: 1080
+class: small-code
+
+*14.21% accuracy*
+<br>
+<small>
+-- Evaluated against 10,000 test strings
+<br>
+-- Predictions options include 'stop words'
+</small>
+<br>
+*Successful Prediction Examples:*
+```{r correct_predictions, echo=FALSE}
+#load ngram dataframes & testing results
+load("accuracy_testing_results.RData")
+
+#set seed
+set.seed(58)
+
+#Correct Predictions
+correct_predictions <- test_predictions_10000[test_predictions_10000$predicted_word == test_predictions_10000$actual_word,]
+
+#save sample
+correct_preds_sample <-  correct_predictions[sample(nrow(correct_predictions), 3, replace = FALSE),]
+
+#remove row names
+row.names(correct_preds_sample) <- NULL
+
+#output
+correct_preds_sample
+```
+
+*Unsuccessful Prediction Examples:*
+```{r incorrect_predictions, echo=FALSE}
+#Incorrect Predictions
+incorrect_predictions <- test_predictions_10000[test_predictions_10000$predicted_word != test_predictions_10000$actual_word,]
+
+#save sample
+incorrect_preds_sample <-  incorrect_predictions[sample(nrow(incorrect_predictions), 3, replace = FALSE),]
+
+#remove row names
+row.names(incorrect_preds_sample) <- NULL
+
+#output
+incorrect_preds_sample
+```
+*Tradeoff:*
+<br>
+<small>
+-- Speed prioritized over accuracy.
+<br>
+-- App includes 5% (12% in final model) of the corpus, due to size restrictions.
+</small>
+
+Product Features
+========================================================
+width: 1920
+height: 1080
+
+**Shiny App Basics**
+<br>
+-- Runs user input through prediction function upon refresh button selection, and tabs update with details.
+<br>
+-- Prediction displays directly below the user input box.
+
+*To View the Full App in Action:*
+<br>
+-- [Shiny Application](https://michaelnichols16.shinyapps.io/Predictive_Text_Application/)
+<br>
+-- [GitHub Repository ~ Code and File Details](https://github.com/mnicho03/Data-Science-Specialization-Capstone)
+
+***
+
+**Shiny App Features**
+<br>
+-- Next word prediction
+<br>
+-- Detailed prediction summary table (*featured on next slide*)
+<br>
+-- Plot of top 10 most likely predictions
+<br>
+-- Example and key terms
+<br>
+-- Red loading icon as visuals render
+
+Product Preview & Shiny Visualization
+========================================================
+width: 1920
+height: 1080
+
+*Example:*
+<br>
+-- Input Text: *"Awesome model!! It's an absolute..."*
+<br>
+-- *Prediction & Details:*
+```{r example_1, echo=FALSE, dpi = 300}
+#load workspace
+load("C:/Users/mnicho03/Desktop/Capstone_Local/Predictive_Text_Application/data/ngram_data_05.RData")
+
+#load libraries
+library(stringr) # for string manipulation
+library(dplyr) # for DF manipulation
+library(ggplot2) # for visuals
+library(kableExtra) # for visuals (cleaner tables)
+#load all functions
+#user input (sample used here: will be dynamic in final model)
+input <- "Awesome model!! It's an absolute..."
+
+#load all functions from cleaning to prediction
+#function to clean user input: matches similar text cleansing done to the corpus to ensure a match can be found
+userInput_cleaner <- function(input){
+        #clean input text
+        #convert all words to lowercase
+        input_cleaning <- str_to_lower(input)
+
+        # separate hyphenated and slashed words
+        input_cleaning <- gsub("-", ' ', input_cleaning)
+        input_cleaning <- gsub("/", ' ', input_cleaning)
+        # removes errant close brackets starting a word
+        input_cleaning <- gsub(">[a-z]", ' ', input_cleaning)
+
+        # removes any remaining <> brackets
+        input_cleaning <- gsub("<>", ' ', input_cleaning)
+
+        # remove apostrophe but retain the words (e.g. "don't" to "dont")
+        input_cleaning <- gsub("'", '', input_cleaning)
+
+        #remove punctuation
+        input_cleaning <- gsub('[[:punct:] ]+', ' ', input_cleaning)
+
+        #remove numbers
+        input_cleaning <- gsub("[0-9]+", "", input_cleaning)
+
+        #remove extra whitespace
+        input_cleaning <- gsub("\\s+", " ", input_cleaning)
+        input_clean <- str_trim(input_cleaning)
+
+        #return the cleaned user input
+        return(input_clean)
+
+}
+
+#save the userInput to be run in the model
+processing_text <- userInput_cleaner(input)
+
+#creates two vars [target_df & ngram_input]
+#determine which ngram to predict against
+set_df_and_ngram <- function(userInput) {
+
+
+        #determine # of words in the input - save globablly
+        userInput_words <- unlist(str_split(userInput, " "))
+        userInput_words_length <- length(userInput_words)
+
+        if (userInput_words_length >= 3) {
+                #if it's a trigram or more
+                #insert the user input into a variable
+                ngram_input <- paste(userInput_words[userInput_words_length-2],
+                                     userInput_words[userInput_words_length-1],
+                                     userInput_words[userInput_words_length])
+
+                #data we want to predict off of: since we're looking at 3 words, we want the quadgram DF to look for the potential 4th
+                target_df <- quadgram_df
+
+        } else if (userInput_words_length == 2) {
+                #if it's a bigram
+                #insert the user input into a variable
+                ngram_input <- paste(userInput_words[userInput_words_length-1],
+                                     userInput_words[userInput_words_length])
+
+                #data we want to predict off of: since we're looking at 2 words, we want the trigram DF to look for the potential 3rd
+                target_df <- trigram_df
+
+        } else {
+                #if it's a unigram
+                #insert the user input into a variable
+                ngram_input <- paste(userInput_words[userInput_words_length])
+
+                #data we want to predict off of: since we're looking at 1 words, we want the bigram DF to look for the potential 2nd
+                target_df <- bigram_df
+
+        }
+
+        #ensure ngram and target_df identified in the function are saved globally
+        assign("ngram_input", ngram_input, envir = .GlobalEnv)
+        assign("target_df", target_df, envir = .GlobalEnv)
+}
+
+#run the function with the cleaned text
+set_df_and_ngram(processing_text)
+
+# determine if target_DF identified above will have a matching ngram
+# if no match exists, search through suceeding (smaller) ngram DF's until a matching ngram exists
+decide_df <- function(ngram_input) {
+        #variable for number of matches
+        ngram_matches <- sum(target_df$preceding == ngram_input)
+
+        #for future revisions: the following code should be optimized
+        #find if current target_DF and ngram_input have any matches
+        #if matches != 0, this statement will not have any impact
+        if(ngram_matches == 0) {
+                #if matches == 0, set target_DF and ngram as n-1
+                #step 1: determine current target_df
+                #if we're looking for a bigram, set ngram & target_df and then there will be no further action
+                if(length(target_df$ngram) == length(bigram_df$ngram)) {
+
+                        ngram_input <- ngram_input
+                        target_df <- unigram_df
+
+                        ngram_matches <- 0
+
+                } else {
+
+                        #check to see if we're looking for a trigram
+                        if(length(target_df$ngram) == length(trigram_df$ngram)) {
+
+                                #update ngram and target_df to n-1
+                                ngram_input <- word(ngram_input, -1)
+                                target_df <- bigram_df
+
+                                #rerun ngram_matches calculation
+                                ngram_matches <- sum(target_df$preceding == ngram_input)
+
+                                #at this point even if there are no matches, there's no further updates we can make (e.g. if we can't predict off only the last word, then we have no way to make a guess)
+
+                        } else {
+                                #last condition will only apply if we're looking for a quadgram
+                                #update ngram and target_df to n-1
+                                #grabs the second to last and the last word
+                                ngram_input <- word(ngram_input, -2, -1)
+                                #sets the new target_df
+                                target_df <- trigram_df
+
+                                #rerun ngram_matches calculation
+                                ngram_matches <- sum(target_df$preceding == ngram_input)
+
+                                #rerun original if to see if we need to check against bigrams
+                                if(ngram_matches == 0) {
+                                        #update ngram and target_df to n-1
+                                        #grabs  the last word
+                                        ngram_input <- word(ngram_input, -1)
+                                        #sets the new target_df
+                                        target_df <- bigram_df
+
+                                        #final rerun of ngram_matches calculation
+                                        ngram_matches <- sum(target_df$preceding == ngram_input)
+
+                                }
+                        }
+                }
+        }
+        #ensure ngram_matches & ngram_input gets saved globally
+        assign("ngram_matches", ngram_matches, envir = .GlobalEnv)
+        assign("ngram_input", ngram_input, envir = .GlobalEnv)
+        assign("target_df", target_df, envir = .GlobalEnv)
+
+
+        #make the target_df what get's returned
+        return(target_df)
+}
+
+#run the function above to confirm the target_df
+target_df <- decide_df(ngram_input)
+
+#take the cleaned ngram and filter based on the user input - to show predicted word as well as top_10 predictions
+set_top_predictions <- function(ngram_input, target_df) {
+
+        #if no matches can be found based on the user input: output top 10 most common words
+        if (length(target_df$ngram) == length(unigram_df$ngram)) {
+                predictions <- unigram_df %>%
+                        # #remove stopwords from predictions
+                        # filter(!predicted_word %in% stop_words$word) %>%
+                        mutate(Probability = round(frequency / sum(frequency), 3)) %>%
+                        arrange(desc(Probability))  %>%
+                        #filter to top 10 only
+                        top_n(n = 10, wt = Probability) %>%
+                        arrange(desc(Probability)) %>%
+                        slice(row_number(1:10)) #ensure 10 values max
+
+                #convert to clean data frame
+                predictions <- as.data.frame(predictions)
+
+
+        } else {
+
+                #gather predictions
+                predictions <- target_df %>%
+                        #filter on exact matches (^ngram$)
+                        filter(grepl(paste0("^", ngram_input, "$"), preceding)) %>%
+                        # #remove stopwords from predictions
+                        # filter(!predicted_word %in% stop_words$word)
+                        mutate(Probability = round(frequency / sum(frequency), 3)) %>%
+                        arrange(desc(Probability)) %>%
+                        #filter to top 10 only
+                        top_n(n = 10, wt = Probability) %>%
+                        arrange(desc(Probability)) %>%
+                        slice(row_number(1:10)) #ensure 10 values max
+
+                #convert to clean data frame
+                predictions <- as.data.frame(predictions)
+        }
+
+        #save predictions DF to be used in data product visualizations
+        #double check it saves properly
+        predictions_df <- predictions
+
+        #save the most 10 likely predictions
+        assign("predictions_df", predictions, envir = .GlobalEnv)
+}
+
+#run the function to capture the most likely predictions
+set_top_predictions(ngram_input, target_df)
+
+#output the prediction
+predictions_df$predicted_word[1]
+```
+```{r example_2, echo=FALSE, dpi = 300}
+#kable table of prediction details
+#what user input is being evaluated?
+User_Input <- input
+#which ngram is being used to predict? (often will be the same as above)
+Ngram_Evaluated <- ngram_input
+#which ngram data frame is being examined (simply count the number of words in the ngram input)
+#"\\S+" - counts separations with a space
+Ngram_DF_Evaluated <- if(str_count(Ngram_Evaluated, "\\S+") == 3) {
+        "Quadgrams"
+}       else if(str_count(Ngram_Evaluated, "\\S+") == 2) {
+        "Trigrams"
+}       else if(str_count(Ngram_Evaluated, "\\S+") == 1) {
+        "Bigrams"
+}       else
+        "Unigrams"
+
+#number of total ngrams possibilities in that group
+Total_Ngram_Possibilities <- length(target_df$ngram)
+
+#how many potential matches were found in the corpus to predict based on?
+Matches_Identified <- ngram_matches
+
+#general info table
+general_info_df <- data.frame(
+        Prediction_Items = c("User Input", "N-gram Evaluated", "N-gram DF Evaluated",  "Total N-gram Possibilities", "Matches Identified"),
+        Current_Evaluation_Information = c(User_Input, Ngram_Evaluated, Ngram_DF_Evaluated, Total_Ngram_Possibilities, Matches_Identified)
+)
+
+general_info_df %>%
+        #print pretty table of the above
+        kable("html", align = "c", escape = F) %>%
+        kable_styling("striped", full_width = F) %>%
+        column_spec(1, bold = TRUE, border_right = T) %>%
+        column_spec(2, italic = TRUE, background = "lightblue") %>%
+        footnote(number = "'N-gram Evaluated' will often equal 'User Input'",
+                 symbol = "'Total N-gram Possibilities' shows the total number of N-grams of this size in the corpus",
+                 number_title = "N-Gram Note: ", symbol_title = "Possibilities vs Identified: ",
+                 footnote_as_chunk = T)
+```
+
+<!-- *** -->
+<!-- *Top 10 Most Likely Predictions* -->
+<!-- ```{r example_3, echo = FALSE, dpi = 300, out.height = "1080px" } -->
+<!-- #top 10 plot -->
+<!-- ggplot(predictions_df, aes(x = reorder(predicted_word, frequency), y = Probability, fill = Probability == max(Probability), color = Probability == max(Probability))) + -->
+<!--         geom_text(aes(label = round(Probability, 3)), color = "black", hjust = -0.07, size = 5) + -->
+<!--         geom_bar(stat = "identity", alpha = .95) + -->
+<!--         #highlight only the predicted value red with a gold border -->
+<!--         scale_fill_manual(values = c("lightsteelblue2", "firebrick3")) + -->
+<!--         scale_color_manual(values = c("white", "goldenrod")) + -->
+<!--         labs(y = "", x = "", title = "Next Word Predictions", subtitle = "Includes (at most) the top 10 most probable next words based on the model") + -->
+<!--         coord_flip(ylim = c(0, .11)) + -->
+<!--         theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 14), axis.text.y = element_text(size = 14), plot.title = element_text(size = 18), plot.subtitle = element_text(size = 15), legend.position = "none") -->
+<!-- ``` -->
