@@ -78,5 +78,6 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
     - Only quadgrams are loaded from the test set since the model only looks at a maximum of 4 word strings (anything greater than 4 words prior do not effect the predictions) -- the quadgrams alone account for 1,229,670 potential test cases: since the predictions take a couple seconds per, only 10,000 quadgrams are tested to evaluate model accuracy
     - Accuracy results: 1,421 / 10,000 correctly predicted ~ 14.21% accuracy
     
-12. predictive_text_app_presentation.Rpres - Rstudio presentation "pitching" the final data product (Shiny app) as if to a boss or potential investor. Slide deck consists of 5 slides that (1) explain how the model works, (2) describe its predictive performance quantitatively, and (3) shows off the app and how it works.
+12. predictive_text_app_presentation.X - Rstudio presentation files "pitching" the final data product (Shiny app) as if to a boss or potential investor. Slide deck consists of 5 slides that (1) explain how the model works, (2) describe its predictive performance quantitatively, and (3) shows off the app and how it works.
+
 - Rstudio Presentation can be viewed here: http://rpubs.com/michaelnichols16/predictive_text_application
