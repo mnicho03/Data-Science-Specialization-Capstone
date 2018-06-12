@@ -23,7 +23,7 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 - app.R - final data product (Shiny application) - includes server.R and ui.R scripts
     - Shiny App can be viewed here: https://michaelnichols16.shinyapps.io/Predictive_Text_Application/
 - predictive_text_app_presentation.Rpres - Rstudio presentation "pitching" the final data product
-    - Rstudio Presentation can be viewed here: XXXXXXXXXXXXXXXXXXX
+    - Rstudio Presentation can be viewed here: http://rpubs.com/michaelnichols16/predictive_text_application
 
 ### All File Summaries
 1. GettingAndCleaning.R - initial R script used to download the files, test random subsampling, and conduct the initial summary statistics for the full text files
@@ -79,4 +79,4 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
     - Accuracy results: 1,421 / 10,000 correctly predicted ~ 14.21% accuracy
     
 12. predictive_text_app_presentation.Rpres - Rstudio presentation "pitching" the final data product (Shiny app) as if to a boss or potential investor. Slide deck consists of 5 slides that (1) explain how the model works, (2) describe its predictive performance quantitatively, and (3) shows off the app and how it works.
-- Rstudio Presentation can be viewed here: XXXXXXXXXXXXXXXXXXX
+- Rstudio Presentation can be viewed here: http://rpubs.com/michaelnichols16/predictive_text_application
