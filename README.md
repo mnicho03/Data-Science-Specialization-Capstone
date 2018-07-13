@@ -5,8 +5,8 @@ Capstone Project for Johns Hopkins Data Science Specialization: Natural Language
 - Apply all the skills developed throughout the Data Science Specialization to tackle a brand new application: analysis of text data and natural language processing. SwiftKey, developer of a smart keyboard to make it easier for people to type on their mobile devices, served as the corporate partner for the project. The dataset provided as the backbone of the project were 3 massive English-language text files (blog posts, news articles, tweets).
 
 ### Project Goal:
-- Mimic the experience of being a data scientist, by encountering a messy data set, a vague question, and very little instruction on exactly how to analyze the data. 
-- Traverse the full spectrum of the data science activities: understanding the problem, data acquisition and cleaning, exploratory analysis, statistical modeling, predictive modeling, creative exploration, creating a data product, creating a short slide deck pitching your product.
+- Mimic the experience of being a data scientist by encountering a messy data set, a vague question, and very little instruction on exactly how to analyze the data. 
+- Traverse the full spectrum of data science activities: understanding the problem, data acquisition and cleaning, exploratory analysis, statistical modeling, predictive modeling, creative exploration, creating a data product, creating a short slide deck pitching your product.
 
 - The full project tasks and deliverables included the following:
 1. An introductory quiz to test whether you have downloaded and can manipulate the data.
